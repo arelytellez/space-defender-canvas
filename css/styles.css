@@ -1,0 +1,10 @@
+body {
+  background: linear-gradient(to bottom, #000428, #004e92);
+}
+
+canvas {
+  background: url('../img/background.jpg');
+  background-size: cover;
+  border: 3px solid cyan;
+  cursor: url('../img/cursor.png'), auto;
+}
