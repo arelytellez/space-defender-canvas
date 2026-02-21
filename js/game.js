@@ -191,9 +191,42 @@ function animateIntro() {
   }
 
   // ⭐ mover estrellas grandes
-  for (let i = demoStarsIntro.length - 1; i >= 0; i--) {
-    let s = demoStarsIntro[i];
-    s.y += s.vy;
+// ⭐ mover estrellas grandes con colisión real
+for (let i = demoStarsIntro.length - 1; i >= 0; i--) {
+  let s = demoStarsIntro[i];
+
+  s.y += s.vy;
+
+  // 🔥 COLISIÓN ENTRE ESTRELLAS (rebote real)
+  for (let j = 0; j < demoStarsIntro.length; j++) {
+
+    if (i === j) continue;
+
+    let other = demoStarsIntro[j];
+
+    let dx = s.x - other.x;
+    let dy = s.y - other.y;
+    let dist = Math.sqrt(dx * dx + dy * dy);
+    let minDist = s.r + other.r;
+
+    if (dist < minDist) {
+
+      // Separarlas
+      let overlap = minDist - dist;
+      let angle = Math.atan2(dy, dx);
+
+      s.x += Math.cos(angle) * overlap * 0.5;
+      s.y += Math.sin(angle) * overlap * 0.5;
+
+      other.x -= Math.cos(angle) * overlap * 0.5;
+      other.y -= Math.sin(angle) * overlap * 0.5;
+
+      // Intercambiar velocidades (rebote simple)
+      let tempVy = s.vy;
+      s.vy = other.vy;
+      other.vy = tempVy;
+    }
+  }
 
     introCtx.save();
     introCtx.beginPath();
