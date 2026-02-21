@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8">
   <title>Defensa Galáctica</title>
@@ -11,45 +10,55 @@
 
 <body>
 
-  <!-- Sonidos -->
-  <audio id="shootSound" src="sounds/shoot.mp3"></audio>
-  <audio id="explosionSound" src="sounds/explosion.mp3"></audio>
+<header class="bg-dark text-center text-light p-3">
+  <h1>⭐ Recolector Estelar</h1>
+  <img src="img/logo.png" width="100">
+</header>
 
-  <header class="bg-dark text-center text-light p-3">
-    <h1>🚀 Defensa Galáctica</h1>
-    <img src="img/logo.png" width="100">
-  </header>
+<main class="container-fluid mt-3">
 
-  <main class="container text-center mt-4">
-
-    <!-- HUD -->
-    <div id="hud" class="mb-2">
-      Vidas: <span id="lives">❤️❤️❤️❤️❤️</span> |
-      Score: <span id="score">0</span> |
-      Nivel: <span id="level">1</span> |
-      Record: <span id="highScore">0</span>
-    </div>
-
-    <!-- Barra -->
+  <!-- BARRA SUPERIOR -->
+  <div id="topBar">
     <div id="levelBarContainer">
       <div id="levelBar"></div>
     </div>
+  </div>
 
-    <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <div class="row">
 
-    <!-- Botones -->
-    <div class="mt-3">
-      <button id="pauseBtn" class="btn btn-warning">Pausar</button>
-      <button id="stopBtn" class="btn btn-danger">Detener</button>
-      <button id="restartBtn" class="btn btn-success">Reiniciar</button>
+    <!-- PANEL IZQUIERDO -->
+    <div class="col-md-2 hud-panel">
+      <h4>Nivel</h4>
+      <div id="level">1</div>
+
+      <h4 class="mt-3">Vidas</h4>
+      <div id="lives">⭐⭐⭐⭐⭐</div>
+
+      <h4 class="mt-3">Score</h4>
+      <div id="score">0</div>
+
+      <h4 class="mt-3">Record</h4>
+      <div id="highScore">0</div>
     </div>
 
-  </main>
+    <!-- CANVAS -->
+    <div class="col-md-8 text-center">
+      <canvas id="gameCanvas" width="900" height="500"></canvas>
+    </div>
 
-  <footer class="bg-dark text-center text-light p-3 mt-4">
-    Creado por: Tu Nombre - 2026
-  </footer>
+    <!-- BOTONES -->
+    <div class="col-md-2 text-center controls-panel">
+      <button id="pauseBtn" class="btn btn-danger btn-lg mb-3">Pausar</button>
+      <button id="stopBtn" class="btn btn-success btn-lg mb-3">Detener</button>
+      <button id="restartBtn" class="btn btn-secondary btn-lg">Reiniciar</button>
+    </div>
 
-  <script src="js/game.js"></script>
+  </div>
+</main>
+
+<!-- SONIDOS -->
+<audio id="collectSound" src="sounds/collect.mp3"></audio>
+
+<script src="js/game.js"></script>
 </body>
 </html>
