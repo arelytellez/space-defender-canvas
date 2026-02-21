@@ -392,3 +392,22 @@ p, li, span{
   font-weight: bold;
   color: #ffffff;
 }
+body {
+  cursor: none;
+}
+
+.custom-cursor {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  background: radial-gradient(circle, #ffffff, #00ffff, #6a0dad);
+  box-shadow: 
+    0 0 10px #00ffff,
+    0 0 20px #6a0dad,
+    0 0 40px #00ffff;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.05s linear;
+}
