@@ -27,6 +27,7 @@ let introStars = [];
 let introStartTime = Date.now();
 let introDuration = 10000;
 let introFinished = false;
+let gameStarted = false; // 🔥 el juego aún no inicia
 
 // 🚀 demo nave
 let demoShipX = 200;
@@ -271,6 +272,11 @@ function endIntro() {
 
   setTimeout(() => {
     introCanvas.style.display = "none";
+
+    // 🔥 MOSTRAR instrucciones aquí
+    instructionsPanel.style.display = "flex";
+    instructionsPanel.style.opacity = "1";
+
   }, 800);
 }
 
@@ -398,7 +404,7 @@ function createSparkle() {
 
 /* ===== UPDATE ===== */
 function update() {
-  if (paused || gameOver || !introFinished) return;
+  if (paused || gameOver || !introFinished || !gameStarted) return;
 
   progress += 0.05 + level * 0.01;
   levelBar.style.width = Math.min(progress, 100) + "%";
@@ -568,11 +574,33 @@ restartBtn.onclick = () => {
 };
 startGameBtn.addEventListener("click", function(){
 
-  // Oculta panel suavemente
   instructionsPanel.style.opacity = "0";
 
   setTimeout(()=>{
     instructionsPanel.style.display = "none";
+
+    // 🔥 AQUÍ reiniciamos todo limpio
+    level = 1;
+    score = 0;
+    lives = 5;
+    progress = 0;
+
+    stars = [];
+    explosions = [];
+    sparkles = [];
+    groundHits = [];
+
+    spawnTimer = 0;
+    spawnInterval = 90;
+
+    paused = false;
+    gameOver = false;
+
+    updateLivesUI();
+    levelBar.style.width = "0%";
+
+    gameStarted = true; // 🚀 AHORA SÍ inicia
   },300);
 
 });
+
