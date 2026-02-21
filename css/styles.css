@@ -182,3 +182,213 @@ canvas{
   color: #00eaff;
   margin-bottom: 20px;
 }
+/* =====================================================
+   🌌 MEJORAS GALÁCTICAS (SIN TOCAR LO EXISTENTE)
+===================================================== */
+
+/* ===== TITULOS NEÓN ESPACIAL ===== */
+h1, h2, h3, h4{
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  text-shadow:
+    0 0 5px #00eaff,
+    0 0 10px #00eaff,
+    0 0 20px rgba(0,234,255,0.8);
+}
+
+/* Texto general con brillo suave */
+p, li, span{
+  text-shadow: 0 0 6px rgba(0,234,255,0.5);
+}
+
+/* ===== BOTONES GALAXIA PRO (MEJORA VISUAL) ===== */
+.controls-panel button{
+  background: linear-gradient(145deg, #001a4d, #000814);
+  border: 2px solid #00eaff;
+  color: #00eaff;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 10px #00eaff,
+    inset 0 0 10px rgba(0,234,255,0.3);
+  animation: pulseEnergy 2s infinite alternate;
+}
+
+/* Hover más potente */
+.controls-panel button:hover{
+  transform: scale(1.1);
+  box-shadow:
+    0 0 20px #00eaff,
+    0 0 40px rgba(0,234,255,0.8);
+}
+
+/* Pulso energético */
+@keyframes pulseEnergy{
+  from{
+    box-shadow: 0 0 10px #00eaff;
+  }
+  to{
+    box-shadow: 0 0 25px #00eaff;
+  }
+}
+
+/* ===== PANEL DE INSTRUCCIONES HOLOGRÁFICO ===== */
+.instructions-box{
+  background: linear-gradient(145deg, #001a4d, #000814);
+  border: 2px solid #00eaff;
+  backdrop-filter: blur(6px);
+  box-shadow:
+    0 0 30px #00eaff,
+    inset 0 0 20px rgba(0,234,255,0.3);
+  animation: floatPanel 3s ease-in-out infinite alternate;
+}
+
+/* Panel flotando */
+@keyframes floatPanel{
+  from{
+    transform: translateY(-5px);
+  }
+  to{
+    transform: translateY(5px);
+  }
+}
+
+/* ===== BOTÓN COMENZAR JUEGO MÁS LLAMATIVO ===== */
+#startGameBtn{
+  background: linear-gradient(135deg, #00eaff, #0066ff);
+  color: black;
+  font-weight: bold;
+  box-shadow:
+    0 0 20px #00eaff,
+    0 0 40px rgba(0,234,255,0.9);
+  animation: startPulse 1.5s infinite alternate;
+}
+
+#startGameBtn:hover{
+  transform: scale(1.15);
+  box-shadow:
+    0 0 30px #00eaff,
+    0 0 60px rgba(0,234,255,1);
+}
+
+@keyframes startPulse{
+  from{
+    box-shadow: 0 0 15px #00eaff;
+  }
+  to{
+    box-shadow: 0 0 35px #00eaff;
+  }
+}
+
+/* ===== VIDAS CON BRILLO ===== */
+.life{
+  text-shadow:
+    0 0 8px #ff004c,
+    0 0 15px rgba(255,0,76,0.8);
+}
+/* =====================================================
+   ⚡ EFECTO GLITCH ESPACIAL
+===================================================== */
+
+.glitch{
+  position: relative;
+  font-size: 2.5rem;
+  color: #00eaff;
+  animation: glitch-skew 2s infinite linear alternate-reverse;
+  text-shadow: none !important;
+}
+
+/* Capas RGB */
+.glitch::before,
+.glitch::after{
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Capa roja */
+.glitch::before{
+  animation: glitch-top 2s infinite linear alternate-reverse;
+  color: #ff004c;
+  z-index: -1;
+}
+
+/* Capa azul */
+.glitch::after{
+  animation: glitch-bottom 1.5s infinite linear alternate-reverse;
+  color: #00ffff;
+  z-index: -2;
+}
+
+/* Animaciones */
+
+@keyframes glitch-top{
+  0% { clip-path: inset(0 0 80% 0); transform: translate(-2px,-2px); }
+  20% { clip-path: inset(0 0 60% 0); transform: translate(2px,2px); }
+  40% { clip-path: inset(0 0 40% 0); transform: translate(-2px,0); }
+  60% { clip-path: inset(0 0 20% 0); transform: translate(2px,-1px); }
+  80% { clip-path: inset(0 0 10% 0); transform: translate(-1px,2px); }
+  100% { clip-path: inset(0 0 80% 0); transform: translate(0,0); }
+}
+
+@keyframes glitch-bottom{
+  0% { clip-path: inset(80% 0 0 0); transform: translate(2px,0); }
+  20% { clip-path: inset(60% 0 0 0); transform: translate(-2px,2px); }
+  40% { clip-path: inset(40% 0 0 0); transform: translate(2px,-1px); }
+  60% { clip-path: inset(20% 0 0 0); transform: translate(-2px,0); }
+  80% { clip-path: inset(10% 0 0 0); transform: translate(1px,-2px); }
+  100% { clip-path: inset(80% 0 0 0); transform: translate(0,0); }
+}
+
+@keyframes glitch-skew{
+  0% { transform: skew(0deg); }
+  20% { transform: skew(1deg); }
+  40% { transform: skew(-1deg); }
+  60% { transform: skew(0.5deg); }
+  80% { transform: skew(-0.5deg); }
+  100% { transform: skew(0deg); }
+}
+/* ======================================
+   📐 MEJOR DISTRIBUCIÓN DEL PANEL DERECHO
+====================================== */
+
+.controls-panel{
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centra verticalmente */
+  align-items: center;
+  gap: 22px; /* 🔥 espacio uniforme entre botones */
+  padding: 30px 20px;
+}
+
+/* Más espacio interno para cada botón */
+.controls-panel button{
+  width: 180px;
+  padding: 14px 0;
+  font-size: 1rem;
+}
+
+/* ======================================
+   📊 MEJOR DISTRIBUCIÓN DEL HUD (NIVEL, SCORE, ETC)
+====================================== */
+
+.hud-panel{
+  display: flex;
+  flex-direction: column;
+  gap: 18px; /* 🔥 espacio entre textos */
+  padding: 25px 20px;
+}
+
+.hud-panel h4{
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Separación visual elegante */
+.hud-panel h4 span{
+  font-weight: bold;
+  color: #ffffff;
+}

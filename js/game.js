@@ -16,6 +16,73 @@ const restartBtn = document.getElementById("restartBtn");
 const instructionsPanel = document.getElementById("instructionsPanel");
 const startGameBtn = document.getElementById("startGameBtn");
 
+/* ======================================
+   🔊 SONIDO GALÁCTICO DINÁMICO
+====================================== */
+
+let audioCtx;
+
+function playStarSound(){
+
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "triangle"; // sonido más espacial
+  oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    1200,
+    audioCtx.currentTime + 0.15
+  );
+
+  gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioCtx.currentTime + 0.2
+  );
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.2);
+}
+/* ======================================
+   💔 SONIDO CUANDO PIERDES VIDA
+====================================== */
+
+function playLoseLifeSound(){
+
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "sawtooth"; // sonido más agresivo
+  oscillator.frequency.setValueAtTime(250, audioCtx.currentTime);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    80,
+    audioCtx.currentTime + 0.4
+  );
+
+  gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioCtx.currentTime + 0.5
+  );
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.5);
+}
+
 /* =====================================================
    🌌 INTRO FULLSCREEN
 ===================================================== */
@@ -405,14 +472,21 @@ function createStar(){
 
 /* ===== EXPLOSION ===== */
 function createExplosion(x, y) {
-  for (let i = 0; i < 12; i++) {
+
+  for (let i = 0; i < 18; i++) {
     explosions.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 4,
-      vy: (Math.random() - 0.5) * 4,
-      life: 30 + Math.random() * 10
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 40 + Math.random() * 20,
+      size: 2 + Math.random() * 3,
+      color: `hsl(${Math.random()*60 + 180}, 100%, 60%)`
     });
   }
+
+  // 🔊 sonido al explotar
+  playStarSound();
 }
 
 /* ===== SUELO ===== */
@@ -475,6 +549,7 @@ function update() {
 
       lives = Math.max(0, lives - 1);
       updateLivesUI();
+      playLoseLifeSound(); // 💔 sonido diferente al perder vida
 
       if (lives <= 0) gameOver = true;
     }
@@ -532,11 +607,63 @@ function draw() {
   drawShip(mouseX, mouseY);
 
   if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "48px Arial";
-    ctx.fillText("GAME OVER", canvas.width / 2 - 140, canvas.height / 2);
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+
+  // 🔥 efecto pulso
+  const pulse = Math.sin(Date.now() * 0.005) * 10;
+
+  ctx.save();
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // Gradiente rojo galáctico
+  const gradient = ctx.createLinearGradient(
+    centerX - 200,
+    centerY,
+    centerX + 200,
+    centerY
+  );
+
+  gradient.addColorStop(0, "#ff004c");
+  gradient.addColorStop(0.5, "#ff0000");
+  gradient.addColorStop(1, "#ff004c");
+
+  ctx.font = `bold ${72 + pulse}px Orbitron`;
+  ctx.fillStyle = gradient;
+
+  ctx.shadowColor = "#ff0000";
+  ctx.shadowBlur = 35;
+
+  ctx.fillText("GAME OVER", centerX, centerY);
+
+  ctx.restore();
+}
+// 💥 dibujar explosiones
+for (let i = explosions.length - 1; i >= 0; i--) {
+  const p = explosions[i];
+
+  ctx.beginPath();
+  ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+  ctx.fillStyle = p.color;
+  ctx.shadowColor = p.color;
+  ctx.shadowBlur = 15;
+  ctx.fill();
+
+  p.x += p.vx;
+  p.y += p.vy;
+  p.life--;
+
+  if (p.life <= 0) {
+    explosions.splice(i, 1);
   }
 }
+
+ctx.shadowBlur = 0;
+}
+
 
 /* ===== DIBUJAR ESTRELLA ===== */
 function drawStar(x, y, r, colorOverride) {
