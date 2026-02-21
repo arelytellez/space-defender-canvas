@@ -9,10 +9,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 
-
 <body>
+
 <!-- 🌌 INTRO FULLSCREEN -->
 <canvas id="introCanvas"></canvas>
+
+<!-- 📘 PANEL DE INSTRUCCIONES -->
+<div id="instructionsPanel" class="instructions-hidden">
+  <div class="instructions-box">
+
+    <h2>🎮 ¿Cómo jugar Recolector Estelar?</h2>
+
+    <p>🖱️ Mueve la nave con el mouse.</p>
+    <p>⭐ Atrapa las estrellas antes de que toquen el suelo.</p>
+    <p>❌ Si una estrella cae, perderás una vida.</p>
+    <p>❤️ Tienes 5 vidas para sobrevivir.</p>
+    <p>📈 Cada nivel aumenta la velocidad y dificultad.</p>
+    <p>🏆 Intenta superar tu propio récord.</p>
+
+    <button id="startGameBtn" class="btn btn-primary btn-lg mt-3">
+      🚀 Comenzar Juego
+    </button>
+
+  </div>
+</div>
+
 <header class="bg-dark text-center text-light p-3">
   <h1>⭐ Recolector Estelar</h1>
   <img src="img/logo.png" width="100">

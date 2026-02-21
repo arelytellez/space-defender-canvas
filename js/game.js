@@ -13,6 +13,9 @@ const pauseBtn = document.getElementById("pauseBtn");
 const stopBtn = document.getElementById("stopBtn");
 const restartBtn = document.getElementById("restartBtn");
 
+const instructionsPanel = document.getElementById("instructionsPanel");
+const startGameBtn = document.getElementById("startGameBtn");
+
 /* =====================================================
    🌌 INTRO FULLSCREEN
 ===================================================== */
@@ -563,3 +566,13 @@ restartBtn.onclick = () => {
   updateLivesUI();
   levelBar.style.width = "0%";
 };
+startGameBtn.addEventListener("click", function(){
+
+  // Oculta panel suavemente
+  instructionsPanel.style.opacity = "0";
+
+  setTimeout(()=>{
+    instructionsPanel.style.display = "none";
+  },300);
+
+});
