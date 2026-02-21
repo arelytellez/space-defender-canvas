@@ -18,6 +18,7 @@ let level = 1;
 let score = 0;
 let lives = 5;
 let highScore = localStorage.getItem("starRecord") || 0;
+
 let paused = false;
 let gameOver = false;
 let progress = 0;
@@ -26,19 +27,22 @@ let stars = [];
 let explosions = [];
 let sparkles = [];
 
+/* ===== CONTROL DE SPAWN POR NIVEL ===== */
+let spawnTimer = 0;
+let spawnInterval = 90; // frames iniciales
+
 /* ===== MOUSE ===== */
-let mouseX = canvas.width/2;
+let mouseX = canvas.width / 2;
 let mouseY = canvas.height - 60;
 const catcherRadius = 26;
 
 /* ===== VIDAS UI ===== */
 function updateLivesUI(){
   livesTxt.innerHTML = "";
-  for(let i=0;i<5;i++){
-    const s=document.createElement("span");
-    s.className="life-star";
-    s.textContent="⭐";
-    if(i>=lives) s.classList.add("life-lost");
+  for(let i = 0; i < 5; i++){
+    const s = document.createElement("span");
+    s.textContent = "⭐";
+    if(i >= lives) s.classList.add("life-lost");
     livesTxt.appendChild(s);
   }
 }
@@ -52,26 +56,29 @@ function playCollectSound(){
 
 /* ===== CREAR ESTRELLA ===== */
 function createStar(){
-  const size = 6 + Math.random()*10;
+  const size = 6 + Math.random() * 10;
+
+  // velocidad aumenta por nivel
+  const speedBase = 1 + level * 0.35;
 
   stars.push({
-    x: Math.random()*(canvas.width-size),
+    x: Math.random() * (canvas.width - size),
     y: -20,
     r: size,
-    vx: (Math.random()-0.5)*1.2,
-    vy: 1 + Math.random()*(1 + level*0.25)
+    vx: (Math.random() - 0.5) * 1.2,
+    vy: speedBase + Math.random() * 1.2
   });
 }
 
 /* ===== EXPLOSION ===== */
 function createExplosion(x, y){
-  for(let i=0;i<12;i++){
+  for(let i = 0; i < 12; i++){
     explosions.push({
       x,
       y,
-      vx:(Math.random()-0.5)*4,
-      vy:(Math.random()-0.5)*4,
-      life:30 + Math.random()*10
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      life: 30 + Math.random() * 10
     });
   }
 }
@@ -79,37 +86,132 @@ function createExplosion(x, y){
 /* ===== DESTELLOS ===== */
 function createSparkle(){
   sparkles.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    r: Math.random()*1.5,
-    life: 60 + Math.random()*60
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5,
+    life: 60 + Math.random() * 60
   });
 }
 
-/* ===== COLISIONES ===== */
-function resolveCollisions(){
-  for(let i=0;i<stars.length;i++){
-    for(let j=i+1;j<stars.length;j++){
-      const a=stars[i];
-      const b=stars[j];
+/* ===== UPDATE ===== */
+function update(){
 
-      const dx=a.x-b.x;
-      const dy=a.y-b.y;
-      const dist=Math.hypot(dx,dy);
+  if(paused || gameOver) return;
 
-      if(dist < a.r + b.r){
-        const angle=Math.atan2(dy,dx);
-        const overlap=(a.r+b.r)-dist;
+  /* ===== PROGRESO DE NIVEL ===== */
+  progress += 0.05 + level * 0.01;
+  levelBar.style.width = Math.min(progress, 100) + "%";
 
-        a.x += Math.cos(angle)*(overlap/2);
-        a.y += Math.sin(angle)*(overlap/2);
-        b.x -= Math.cos(angle)*(overlap/2);
-        b.y -= Math.sin(angle)*(overlap/2);
+  if(progress >= 100){
+    level++;
+    progress = 0;
 
-        [a.vx,b.vx]=[b.vx,a.vx];
-        [a.vy,b.vy]=[b.vy,a.vy];
-      }
+    // cada nivel salen más seguido
+    spawnInterval = Math.max(25, spawnInterval - 8);
+  }
+
+  /* ===== SPAWN PROGRESIVO ===== */
+  spawnTimer++;
+  if(spawnTimer >= spawnInterval){
+    createStar();
+    spawnTimer = 0;
+  }
+
+  /* ===== MOVER ESTRELLAS ===== */
+  for(let i = stars.length - 1; i >= 0; i--){
+    const s = stars[i];
+
+    s.x += s.vx;
+    s.y += s.vy;
+
+    if(s.x < 0 || s.x > canvas.width) s.vx *= -1;
+
+    // ⭐ TOCA FONDO → pierde vida
+    if(s.y > canvas.height){
+      createExplosion(s.x, canvas.height);
+      stars.splice(i, 1);
+
+      lives = Math.max(0, lives - 1);
+      updateLivesUI();
+
+      if(lives <= 0) gameOver = true;
+      continue;
     }
+
+    // ⭐ RECOLECTOR
+    const d = Math.hypot(s.x - mouseX, s.y - mouseY);
+    if(d < s.r + catcherRadius){
+      score += 10;
+      createExplosion(s.x, s.y);
+      playCollectSound();
+      stars.splice(i, 1);
+      continue;
+    }
+  }
+
+  /* ===== RECORD ===== */
+  if(score > highScore){
+    highScore = score;
+    localStorage.setItem("starRecord", highScore);
+  }
+
+  levelTxt.textContent = level;
+  scoreTxt.textContent = score;
+  recordTxt.textContent = highScore;
+}
+
+/* ===== DRAW ===== */
+function draw(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // destellos fondo
+  if(Math.random() < 0.25) createSparkle();
+
+  for(let i = sparkles.length - 1; i >= 0; i--){
+    const s = sparkles[i];
+
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+
+    s.life--;
+    if(s.life <= 0) sparkles.splice(i, 1);
+  }
+
+  // estrellas
+  stars.forEach(s => {
+    drawStar(s.x, s.y, s.r);
+  });
+
+  // explosiones
+  for(let i = explosions.length - 1; i >= 0; i--){
+    const p = explosions[i];
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+    ctx.fillStyle = "cyan";
+    ctx.fill();
+
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life--;
+
+    if(p.life <= 0) explosions.splice(i, 1);
+  }
+
+  // recolector
+  ctx.beginPath();
+  ctx.arc(mouseX, mouseY, catcherRadius, 0, Math.PI * 2);
+  ctx.strokeStyle = "#00eaff";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // game over
+  if(gameOver){
+    ctx.fillStyle = "red";
+    ctx.font = "48px Arial";
+    ctx.fillText("GAME OVER", canvas.width/2 - 140, canvas.height/2);
   }
 }
 
@@ -129,126 +231,13 @@ function drawStar(x,y,r){
   }
   ctx.closePath();
 
-  const g=ctx.createRadialGradient(x,y,1,x,y,r);
+  const g = ctx.createRadialGradient(x,y,1,x,y,r);
   g.addColorStop(0,"#fff");
   g.addColorStop(1,"#00eaff");
 
-  ctx.fillStyle=g;
+  ctx.fillStyle = g;
   ctx.fill();
   ctx.restore();
-}
-
-/* ===== UPDATE ===== */
-function update(){
-
-  if(paused || gameOver) return;
-
-  progress += 0.05 + level*0.01;
-  levelBar.style.width = Math.min(progress,100) + "%";
-
-  if(progress >= 100){
-    level++;
-    progress = 0;
-  }
-
-  if(Math.random() < 0.04 + level*0.01){
-    createStar();
-  }
-
-  for(let i = stars.length - 1; i >= 0; i--){
-    const s = stars[i];
-
-    s.x += s.vx;
-    s.y += s.vy;
-
-    if(s.x < 0 || s.x > canvas.width) s.vx *= -1;
-
-    // toca fondo
-    if(s.y > canvas.height){
-      createExplosion(s.x, canvas.height);
-      stars.splice(i,1);
-      lives--;
-      updateLivesUI();
-
-      if(lives <= 0) gameOver = true;
-      continue;
-    }
-
-    // recolector
-    const d=Math.hypot(s.x-mouseX,s.y-mouseY);
-    if(d < s.r + catcherRadius){
-      score += 10;
-      createExplosion(s.x,s.y);
-      playCollectSound();
-      stars.splice(i,1);
-      continue;
-    }
-  }
-
-  resolveCollisions();
-
-  if(score > highScore){
-    highScore = score;
-    localStorage.setItem("starRecord", highScore);
-  }
-
-  levelTxt.textContent = level;
-  scoreTxt.textContent = score;
-  recordTxt.textContent = highScore;
-}
-
-/* ===== DRAW ===== */
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // destellos fondo
-  if(Math.random() < 0.3) createSparkle();
-
-  for(let i=sparkles.length-1;i>=0;i--){
-    const s=sparkles[i];
-
-    ctx.beginPath();
-    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle="white";
-    ctx.fill();
-
-    s.life--;
-    if(s.life<=0) sparkles.splice(i,1);
-  }
-
-  // estrellas
-  stars.forEach(s=>{
-    drawStar(s.x,s.y,s.r);
-  });
-
-  // explosiones
-  for(let i=explosions.length-1;i>=0;i--){
-    const p=explosions[i];
-
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,2,0,Math.PI*2);
-    ctx.fillStyle="cyan";
-    ctx.fill();
-
-    p.x+=p.vx;
-    p.y+=p.vy;
-    p.life--;
-
-    if(p.life<=0) explosions.splice(i,1);
-  }
-
-  // recolector
-  ctx.beginPath();
-  ctx.arc(mouseX,mouseY,catcherRadius,0,Math.PI*2);
-  ctx.strokeStyle="#00eaff";
-  ctx.lineWidth=3;
-  ctx.stroke();
-
-  if(gameOver){
-    ctx.fillStyle="red";
-    ctx.font="48px Arial";
-    ctx.fillText("GAME OVER",canvas.width/2-140,canvas.height/2);
-  }
 }
 
 /* ===== LOOP ===== */
@@ -259,9 +248,9 @@ function loop(){
 }
 
 /* ===== EVENTOS ===== */
-canvas.addEventListener("mousemove",e=>{
-  const rect=canvas.getBoundingClientRect();
-  mouseX=e.clientX-rect.left;
+canvas.addEventListener("mousemove", e=>{
+  const rect = canvas.getBoundingClientRect();
+  mouseX = e.clientX - rect.left;
 });
 
 /* ===== BOTONES ===== */
@@ -271,6 +260,7 @@ pauseBtn.onclick = () => {
 };
 
 stopBtn.onclick = () => {
+  paused = false;
   gameOver = true;
 };
 
