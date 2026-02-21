@@ -55,7 +55,57 @@ function playCollectSound(){
   collectSound.play().catch(()=>{});
 }
 
-/* ===== CREAR ESTRELLA (FIX CANVAS) ===== */
+/* ===== SCREEN SHAKE ===== */
+function triggerScreenShake(){
+  canvas.classList.remove("shake");
+  void canvas.offsetWidth;
+  canvas.classList.add("shake");
+}
+
+/* ===== 🚀 NAVE GALÁCTICA ===== */
+function drawShip(x, y){
+  ctx.save();
+  ctx.translate(x, y);
+
+  // glow gamer
+  ctx.shadowColor = "#00eaff";
+  ctx.shadowBlur = 18;
+
+  // ===== CUERPO =====
+  ctx.beginPath();
+  ctx.moveTo(0, -24);
+  ctx.lineTo(16, 14);
+  ctx.lineTo(6, 8);
+  ctx.lineTo(-6, 8);
+  ctx.lineTo(-16, 14);
+  ctx.closePath();
+
+  const grad = ctx.createLinearGradient(0, -24, 0, 20);
+  grad.addColorStop(0, "#ffffff");
+  grad.addColorStop(1, "#00eaff");
+
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // ===== CABINA =====
+  ctx.shadowBlur = 0;
+  ctx.beginPath();
+  ctx.arc(0, -6, 5, 0, Math.PI * 2);
+  ctx.fillStyle = "#001a4d";
+  ctx.fill();
+
+  // ===== FLAMA =====
+  ctx.beginPath();
+  ctx.moveTo(-4, 14);
+  ctx.lineTo(0, 26 + Math.random()*5);
+  ctx.lineTo(4, 14);
+  ctx.fillStyle = "orange";
+  ctx.fill();
+
+  ctx.restore();
+}
+
+/* ===== CREAR ESTRELLA ===== */
 function createStar(){
   const size = 6 + Math.random() * 10;
   const speedBase = 1 + level * 0.35;
@@ -65,7 +115,10 @@ function createStar(){
     y: -size,
     r: size,
     vx: (Math.random() - 0.5) * 1.2,
-    vy: speedBase + Math.random() * 1.2
+    vy: speedBase + Math.random() * 1.2,
+    missed: false,
+    missTimer: 0,
+    colorOverride: null
   });
 }
 
@@ -104,10 +157,8 @@ function createSparkle(){
 
 /* ===== UPDATE ===== */
 function update(){
-
   if(paused || gameOver) return;
 
-  /* ===== PROGRESO NIVEL ===== */
   progress += 0.05 + level * 0.01;
   levelBar.style.width = Math.min(progress, 100) + "%";
 
@@ -117,21 +168,18 @@ function update(){
     spawnInterval = Math.max(25, spawnInterval - 8);
   }
 
-  /* ===== SPAWN PROGRESIVO ===== */
   spawnTimer++;
   if(spawnTimer >= spawnInterval){
     createStar();
     spawnTimer = 0;
   }
 
-  /* ===== MOVER ESTRELLAS ===== */
   for(let i = stars.length - 1; i >= 0; i--){
     const s = stars[i];
 
     s.x += s.vx;
     s.y += s.vy;
 
-    /* ===== REBOTE LATERAL FIX ===== */
     if(s.x - s.r < 0){
       s.x = s.r;
       s.vx *= -1;
@@ -141,24 +189,32 @@ function update(){
       s.vx *= -1;
     }
 
-    /* ===== TOCA FONDO ===== */
-    if(s.y - s.r > canvas.height){
+    if(!s.missed && s.y + s.r >= canvas.height){
+      s.y = canvas.height - s.r;
+      s.missed = true;
+      s.missTimer = 60;
+      s.colorOverride = "red";
 
       createExplosion(s.x, canvas.height - 10);
       createGroundHit(s.x);
-
-      stars.splice(i, 1);
+      triggerScreenShake();
 
       lives = Math.max(0, lives - 1);
       updateLivesUI();
 
       if(lives <= 0) gameOver = true;
-      continue;
     }
 
-    /* ===== RECOLECTOR ===== */
+    if(s.missed){
+      s.missTimer--;
+      if(s.missTimer <= 0){
+        stars.splice(i, 1);
+        continue;
+      }
+    }
+
     const d = Math.hypot(s.x - mouseX, s.y - mouseY);
-    if(d < s.r + catcherRadius){
+    if(!s.missed && d < s.r + catcherRadius){
       score += 10;
       createExplosion(s.x, s.y);
       playCollectSound();
@@ -167,7 +223,6 @@ function update(){
     }
   }
 
-  /* ===== RECORD ===== */
   if(score > highScore){
     highScore = score;
     localStorage.setItem("starRecord", highScore);
@@ -182,66 +237,49 @@ function update(){
 function draw(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  /* ===== DESTELLOS ===== */
   if(Math.random() < 0.25) createSparkle();
 
   for(let i = sparkles.length - 1; i >= 0; i--){
     const s = sparkles[i];
-
     ctx.beginPath();
     ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
     ctx.fillStyle = "white";
     ctx.fill();
-
     s.life--;
     if(s.life <= 0) sparkles.splice(i, 1);
   }
 
-  /* ===== ESTRELLAS ===== */
   stars.forEach(s => {
-    drawStar(s.x, s.y, s.r);
+    drawStar(s.x, s.y, s.r, s.colorOverride);
   });
 
-  /* ===== EXPLOSIONES ===== */
   for(let i = explosions.length - 1; i >= 0; i--){
     const p = explosions[i];
-
     ctx.beginPath();
     ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
     ctx.fillStyle = "cyan";
     ctx.fill();
-
     p.x += p.vx;
     p.y += p.vy;
     p.life--;
-
     if(p.life <= 0) explosions.splice(i, 1);
   }
 
-  /* ===== IMPACTO SUELO ===== */
   for(let i = groundHits.length - 1; i >= 0; i--){
     const g = groundHits[i];
-
     ctx.beginPath();
     ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
     ctx.strokeStyle = "red";
     ctx.lineWidth = 2;
     ctx.stroke();
-
     g.radius += 1.2;
     g.life--;
-
     if(g.life <= 0) groundHits.splice(i, 1);
   }
 
-  /* ===== RECOLECTOR ===== */
-  ctx.beginPath();
-  ctx.arc(mouseX, mouseY, catcherRadius, 0, Math.PI * 2);
-  ctx.strokeStyle = "#00eaff";
-  ctx.lineWidth = 3;
-  ctx.stroke();
+  // 🚀 NAVE DEL JUGADOR
+  drawShip(mouseX, mouseY);
 
-  /* ===== GAME OVER ===== */
   if(gameOver){
     ctx.fillStyle = "red";
     ctx.font = "48px Arial";
@@ -250,7 +288,7 @@ function draw(){
 }
 
 /* ===== DIBUJAR ESTRELLA ===== */
-function drawStar(x,y,r){
+function drawStar(x,y,r,colorOverride){
   ctx.save();
   ctx.beginPath();
   for(let i=0;i<5;i++){
@@ -265,11 +303,15 @@ function drawStar(x,y,r){
   }
   ctx.closePath();
 
-  const g = ctx.createRadialGradient(x,y,1,x,y,r);
-  g.addColorStop(0,"#fff");
-  g.addColorStop(1,"#00eaff");
+  if(colorOverride){
+    ctx.fillStyle = colorOverride;
+  }else{
+    const g = ctx.createRadialGradient(x,y,1,x,y,r);
+    g.addColorStop(0,"#fff");
+    g.addColorStop(1,"#00eaff");
+    ctx.fillStyle = g;
+  }
 
-  ctx.fillStyle = g;
   ctx.fill();
   ctx.restore();
 }
@@ -288,18 +330,39 @@ canvas.addEventListener("mousemove", e=>{
 });
 
 /* ===== BOTONES ===== */
+
+// 🔴 PAUSAR
 pauseBtn.onclick = () => {
-  paused = !paused;
-  pauseBtn.textContent = paused ? "Continuar" : "Pausar";
+  if(gameOver) return;
+  paused = true;
 };
 
+// 🟢 CONTINUAR
 stopBtn.onclick = () => {
+  if(gameOver) return;
   paused = false;
-  gameOver = true;
 };
 
+// 🔄 REINICIAR
 restartBtn.onclick = () => {
-  location.reload();
+  level = 1;
+  score = 0;
+  lives = 5;
+  progress = 0;
+
+  stars = [];
+  explosions = [];
+  sparkles = [];
+  groundHits = [];
+
+  spawnTimer = 0;
+  spawnInterval = 90;
+
+  paused = false;
+  gameOver = false;
+
+  updateLivesUI();
+  levelBar.style.width = "0%";
 };
 
 /* ===== START ===== */

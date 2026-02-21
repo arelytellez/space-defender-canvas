@@ -1,8 +1,18 @@
+/* ===== FUENTE GLOBAL ===== */
 body{
-  background: linear-gradient(to bottom, #001a4d, #000);
+  background: radial-gradient(circle at top, #001a4d, #000814 70%);
   color: white;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 1px;
 }
 
+/* ===== HEADER ===== */
+header{
+  background: linear-gradient(90deg, #020024, #001a4d);
+  box-shadow: 0 0 20px rgba(0,234,255,0.4);
+}
+
+/* ===== BARRA SUPERIOR ===== */
 #topBar{
   width: 100%;
   padding: 10px 20px;
@@ -11,9 +21,10 @@ body{
 #levelBarContainer{
   width: 100%;
   height: 16px;
-  background: #222;
+  background: #111;
   border-radius: 10px;
   overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(0,255,255,0.4);
 }
 
 #levelBar{
@@ -21,21 +32,103 @@ body{
   width: 0%;
   background: linear-gradient(90deg, cyan, lime);
   transition: width .25s linear;
+  box-shadow: 0 0 12px cyan;
 }
 
+/* ===== CANVAS ===== */
 canvas{
   background: black;
   border: 2px solid #00eaff;
+  box-shadow:
+    0 0 10px #00eaff,
+    inset 0 0 20px rgba(0,234,255,0.15);
 }
 
+/* ===== PANEL HUD ===== */
 .hud-panel{
   text-align: left;
   padding-left: 20px;
 }
 
-.controls-panel button{
-  width: 140px;
+.hud-panel h4{
+  color: #00eaff;
+  text-shadow: 0 0 6px rgba(0,234,255,0.7);
 }
+
+/* ===== BOTONES GALÁCTICOS ===== */
+.controls-panel button{
+  width: 160px;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  letter-spacing: 1px;
+  transition: all .25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* efecto glow base */
+.controls-panel button::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.25), transparent 60%);
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.controls-panel button:hover::after{
+  opacity: 1;
+}
+
+/* ===== BOTÓN PAUSAR ===== */
+#pauseBtn{
+  background: linear-gradient(135deg, #ff3b3b, #a80000);
+  box-shadow: 0 0 12px rgba(255,0,0,0.6);
+}
+
+#pauseBtn:hover{
+  transform: scale(1.08);
+  box-shadow: 0 0 22px rgba(255,0,0,0.9);
+}
+
+/* ===== BOTÓN CONTINUAR ===== */
+#stopBtn{
+  background: linear-gradient(135deg, #00c853, #006c2c);
+  box-shadow: 0 0 12px rgba(0,255,120,0.6);
+}
+
+#stopBtn:hover{
+  transform: scale(1.08);
+  box-shadow: 0 0 22px rgba(0,255,120,0.9);
+}
+
+/* ===== BOTÓN REINICIAR ===== */
+#restartBtn{
+  background: linear-gradient(135deg, #6c757d, #343a40);
+  box-shadow: 0 0 10px rgba(200,200,200,0.5);
+}
+
+#restartBtn:hover{
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(255,255,255,0.8);
+}
+
+/* ===== VIDAS ===== */
 .life-lost{
   opacity: 0.25;
-  }
+}
+
+/* ===== SCREEN SHAKE ===== */
+.shake {
+  animation: screenShake 0.35s ease-in-out;
+}
+
+@keyframes screenShake {
+  0%   { transform: translate(0,0); }
+  20%  { transform: translate(-6px, 4px); }
+  40%  { transform: translate(6px, -4px); }
+  60%  { transform: translate(-4px, 2px); }
+  80%  { transform: translate(4px, -2px); }
+  100% { transform: translate(0,0); }
+}
