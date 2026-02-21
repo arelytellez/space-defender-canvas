@@ -26,10 +26,11 @@ let progress = 0;
 let stars = [];
 let explosions = [];
 let sparkles = [];
+let groundHits = [];
 
-/* ===== CONTROL DE SPAWN POR NIVEL ===== */
+/* ===== SPAWN POR NIVEL ===== */
 let spawnTimer = 0;
-let spawnInterval = 90; // frames iniciales
+let spawnInterval = 90;
 
 /* ===== MOUSE ===== */
 let mouseX = canvas.width / 2;
@@ -54,16 +55,14 @@ function playCollectSound(){
   collectSound.play().catch(()=>{});
 }
 
-/* ===== CREAR ESTRELLA ===== */
+/* ===== CREAR ESTRELLA (FIX CANVAS) ===== */
 function createStar(){
   const size = 6 + Math.random() * 10;
-
-  // velocidad aumenta por nivel
   const speedBase = 1 + level * 0.35;
 
   stars.push({
-    x: Math.random() * (canvas.width - size),
-    y: -20,
+    x: size + Math.random() * (canvas.width - size * 2),
+    y: -size,
     r: size,
     vx: (Math.random() - 0.5) * 1.2,
     vy: speedBase + Math.random() * 1.2
@@ -83,6 +82,16 @@ function createExplosion(x, y){
   }
 }
 
+/* ===== EFECTO SUELO ===== */
+function createGroundHit(x){
+  groundHits.push({
+    x: x,
+    y: canvas.height - 4,
+    life: 20,
+    radius: 8
+  });
+}
+
 /* ===== DESTELLOS ===== */
 function createSparkle(){
   sparkles.push({
@@ -98,15 +107,13 @@ function update(){
 
   if(paused || gameOver) return;
 
-  /* ===== PROGRESO DE NIVEL ===== */
+  /* ===== PROGRESO NIVEL ===== */
   progress += 0.05 + level * 0.01;
   levelBar.style.width = Math.min(progress, 100) + "%";
 
   if(progress >= 100){
     level++;
     progress = 0;
-
-    // cada nivel salen más seguido
     spawnInterval = Math.max(25, spawnInterval - 8);
   }
 
@@ -124,11 +131,22 @@ function update(){
     s.x += s.vx;
     s.y += s.vy;
 
-    if(s.x < 0 || s.x > canvas.width) s.vx *= -1;
+    /* ===== REBOTE LATERAL FIX ===== */
+    if(s.x - s.r < 0){
+      s.x = s.r;
+      s.vx *= -1;
+    }
+    if(s.x + s.r > canvas.width){
+      s.x = canvas.width - s.r;
+      s.vx *= -1;
+    }
 
-    // ⭐ TOCA FONDO → pierde vida
-    if(s.y > canvas.height){
-      createExplosion(s.x, canvas.height);
+    /* ===== TOCA FONDO ===== */
+    if(s.y - s.r > canvas.height){
+
+      createExplosion(s.x, canvas.height - 10);
+      createGroundHit(s.x);
+
       stars.splice(i, 1);
 
       lives = Math.max(0, lives - 1);
@@ -138,7 +156,7 @@ function update(){
       continue;
     }
 
-    // ⭐ RECOLECTOR
+    /* ===== RECOLECTOR ===== */
     const d = Math.hypot(s.x - mouseX, s.y - mouseY);
     if(d < s.r + catcherRadius){
       score += 10;
@@ -164,7 +182,7 @@ function update(){
 function draw(){
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // destellos fondo
+  /* ===== DESTELLOS ===== */
   if(Math.random() < 0.25) createSparkle();
 
   for(let i = sparkles.length - 1; i >= 0; i--){
@@ -179,12 +197,12 @@ function draw(){
     if(s.life <= 0) sparkles.splice(i, 1);
   }
 
-  // estrellas
+  /* ===== ESTRELLAS ===== */
   stars.forEach(s => {
     drawStar(s.x, s.y, s.r);
   });
 
-  // explosiones
+  /* ===== EXPLOSIONES ===== */
   for(let i = explosions.length - 1; i >= 0; i--){
     const p = explosions[i];
 
@@ -200,14 +218,30 @@ function draw(){
     if(p.life <= 0) explosions.splice(i, 1);
   }
 
-  // recolector
+  /* ===== IMPACTO SUELO ===== */
+  for(let i = groundHits.length - 1; i >= 0; i--){
+    const g = groundHits[i];
+
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    g.radius += 1.2;
+    g.life--;
+
+    if(g.life <= 0) groundHits.splice(i, 1);
+  }
+
+  /* ===== RECOLECTOR ===== */
   ctx.beginPath();
   ctx.arc(mouseX, mouseY, catcherRadius, 0, Math.PI * 2);
   ctx.strokeStyle = "#00eaff";
   ctx.lineWidth = 3;
   ctx.stroke();
 
-  // game over
+  /* ===== GAME OVER ===== */
   if(gameOver){
     ctx.fillStyle = "red";
     ctx.font = "48px Arial";
